@@ -1,0 +1,79 @@
+#version 450 core
+
+// Blood Effect Compute Shader for Vulkan
+// Simple blood simulation using compute shaders
+
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0) buffer ParticleBuffer {
+    vec4 position;  // xyz = position, w = age
+    vec4 velocity;  // xyz = velocity, w = life
+    vec4 color;     // rgba
+    vec4 size;      // x = size, yzw = properties
+} particles[];
+
+layout(binding = 1) uniform SimulationParams {
+    vec4 gravity;
+    vec4 wind;
+    vec4 time;
+    vec4 params;
+} sim;
+
+// Random number generator
+float random(vec2 seed) {
+    return fract(sin(dot(seed.xy, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+// Simple noise function
+float noise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float a = random(i.xy + p.z);
+    float b = random(i.xy + vec2(1.0, 0.0) + p.z);
+    float c = random(i.xy + vec2(0.0, 1.0) + p.z);
+    float d = random(i.xy + vec2(1.0, 1.0) + p.z);
+    
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    
+    // Get particle data
+    vec3 pos = particles[idx].position.xyz;
+    vec3 vel = particles[idx].velocity.xyz;
+    vec4 col = particles[idx].color;
+    float size = particles[idx].size.x;
+    float age = particles[idx].position.w;
+    float life = particles[idx].velocity.w;
+    
+    // Apply forces
+    vel += gravity.xyz * sim.time.y;
+    vel += wind.xyz * sim.time.y * 0.1;
+    
+    // Add some turbulence
+    vel += vec3(
+        noise(pos + sim.time.xxx) * 0.1,
+        noise(pos + sim.time.xxx + vec3(100.0)) * 0.1,
+        noise(pos + sim.time.xxx + vec3(200.0)) * 0.1
+    ) * sim.time.y;
+    
+    // Update position
+    pos += vel * sim.time.y;
+    
+    // Update age and life
+    age += sim.time.y;
+    life -= sim.time.y * 0.1;
+    
+    // Update color based on age
+    float ageFactor = clamp(age * 0.1, 0.0, 1.0);
+    col.rgb = mix(vec3(0.8, 0.1, 0.1), vec3(0.3, 0.05, 0.05), ageFactor);
+    
+    // Store updated data
+    particles[idx].position = vec4(pos, age);
+    particles[idx].velocity = vec4(vel, life);
+    particles[idx].color = col;
+    particles[idx].size.x = size;
+}
