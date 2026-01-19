@@ -5,8 +5,6 @@ Red Files (RD) is a horror experience that follows the intertwined fates of thre
 ## Characters 
 # Keanu Reeves
 The protagonist and central figure of our story. Caught between two worlds and two friendships, Keanu must navigate the increasingly disturbing events unfolding around him.
-# Ryan Allemand
-Keanu's best friend and confidant. Ryan serves as a grounding presence in Keanu's life, but even the strongest bonds are tested when horror becomes reality.
 # Brutas von Choy
 Keanu's other best friend, harboring a dark and unsettling ability. Brutas eliminates enemies through a grotesque method—consuming them through an opening in his body. This horrifying power raises questions: Is Brutas protecting his friends, or is he something far more sinister?
 
